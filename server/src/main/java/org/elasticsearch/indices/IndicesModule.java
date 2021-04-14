@@ -136,6 +136,9 @@ public class IndicesModule extends AbstractModule {
         for (MapperPlugin mapperPlugin : mapperPlugins) {
             for (Map.Entry<String, Mapper.TypeParser> entry : mapperPlugin.getMappers().entrySet()) {
                 if (mappers.put(entry.getKey(), entry.getValue()) != null) {
+                    if(entry.getKey().equals("geo_shape")) {
+                        continue;
+                    }
                     throw new IllegalArgumentException("Mapper [" + entry.getKey() + "] is already registered");
                 }
             }

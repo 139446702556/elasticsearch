@@ -24,11 +24,11 @@ apply plugin: 'elasticsearch.rest-test'
 apply plugin: 'elasticsearch.rest-resources'
 
 final Project fixture = project(':test:fixtures:azure-fixture')
-final Project repositoryPlugin = project(':plugins:repository-azure')
+//final Project repositoryPlugin = project(':plugins:repository-azure')
 
 dependencies {
   testImplementation project(path: xpackModule('repositories-metering-api'), configuration: 'testArtifacts')
-  testImplementation repositoryPlugin
+  //testImplementation repositoryPlugin
 }
 
 restResources {
@@ -61,14 +61,14 @@ if (useFixture) {
 }
 
 integTest {
-  dependsOn repositoryPlugin.bundlePlugin
+  //dependsOn repositoryPlugin.bundlePlugin
   systemProperty 'test.azure.container', azureContainer
   nonInputProperties.systemProperty 'test.azure.base_path', azureBasePath + "_repositories_metering_tests_" + BuildParams.testSeed
 }
 
 testClusters.integTest {
   testDistribution = 'DEFAULT'
-  plugin repositoryPlugin.bundlePlugin.archiveFile
+  //plugin repositoryPlugin.bundlePlugin.archiveFile
 
   keystore 'azure.client.repositories_metering.account', azureAccount
   if (azureKey != null && azureKey.isEmpty() == false) {

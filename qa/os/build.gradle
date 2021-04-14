@@ -22,24 +22,24 @@ plugins {
 }
 
 dependencies {
-  api "junit:junit:${versions.junit}"
-  api "org.hamcrest:hamcrest:${versions.hamcrest}"
-  api "com.carrotsearch.randomizedtesting:randomizedtesting-runner:${versions.randomizedrunner}"
+  api "junit:junit:3.8.1"
+  api "org.hamcrest:hamcrest:2.1"
+  api "com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.7.1"
 
-  api "org.apache.httpcomponents:httpcore:${versions.httpcore}"
-  api "org.apache.httpcomponents:httpclient:${versions.httpclient}"
-  api "org.apache.httpcomponents:fluent-hc:${versions.httpclient}"
-  api "org.apache.logging.log4j:log4j-api:${versions.log4j}"
-  api "org.apache.logging.log4j:log4j-core:${versions.log4j}"
-  api "org.apache.logging.log4j:log4j-jcl:${versions.log4j}"
-  api "commons-codec:commons-codec:${versions.commonscodec}"
-  api "commons-logging:commons-logging:${versions.commonslogging}"
+  api "org.apache.httpcomponents:httpcore:4.4.12"
+  api "org.apache.httpcomponents:httpclient:4.5.10"
+  api "org.apache.httpcomponents:fluent-hc:4.5.10"
+  api "org.apache.logging.log4j:log4j-api:2.11.1"
+  api "org.apache.logging.log4j:log4j-core:2.11.1"
+  api "org.apache.logging.log4j:log4j-jcl:2.11.1"
+  api "commons-codec:commons-codec:1.12"
+  api "commons-logging:commons-logging:1.2"
 
   api project(':libs:elasticsearch-core')
 
-  testImplementation "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}"
-  testImplementation "com.fasterxml.jackson.core:jackson-core:${versions.jackson}"
-  testImplementation "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}"
+  testImplementation "com.fasterxml.jackson.core:jackson-annotations:2.10.4"
+  testImplementation "com.fasterxml.jackson.core:jackson-core:2.10.4"
+  testImplementation "com.fasterxml.jackson.core:jackson-databind:2.10.4"
 }
 
 tasks.named('forbiddenApisTest').configure {

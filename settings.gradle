@@ -107,7 +107,7 @@ for (File example : examplePluginsDir.listFiles()) {
   if (example.name.startsWith('build') || example.name.startsWith('.')) continue;
   addSubProjects(':example-plugins', example)
 }
-project(':example-plugins').projectDir = new File(rootProject.projectDir, 'plugins/examples')
+//project(':example-plugins').projectDir = new File(rootProject.projectDir, 'plugins/examples')
 
 addSubProjects('', new File(rootProject.projectDir, 'libs'))
 addSubProjects('', new File(rootProject.projectDir, 'modules'))

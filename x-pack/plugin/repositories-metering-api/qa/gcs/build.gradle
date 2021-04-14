@@ -30,11 +30,11 @@ apply plugin: 'elasticsearch.rest-test'
 apply plugin: 'elasticsearch.rest-resources'
 
 final Project fixture = project(':test:fixtures:gcs-fixture')
-final Project repositoryPlugin = project(':plugins:repository-gcs')
+//final Project repositoryPlugin = project(':plugins:repository-gcs')
 
 dependencies {
   testImplementation project(path: xpackModule('repositories-metering-api'), configuration: 'testArtifacts')
-  testImplementation repositoryPlugin
+  //testImplementation repositoryPlugin
 }
 
 restResources {
@@ -105,14 +105,14 @@ if (useFixture) {
 }
 
 integTest {
-  dependsOn repositoryPlugin.bundlePlugin
+  //dependsOn repositoryPlugin.bundlePlugin
   systemProperty 'test.gcs.bucket', gcsBucket
   nonInputProperties.systemProperty 'test.gcs.base_path', gcsBasePath + "_repositories_metering" + BuildParams.testSeed
 }
 
 testClusters.integTest {
   testDistribution = 'DEFAULT'
-  plugin repositoryPlugin.bundlePlugin.archiveFile
+  //plugin repositoryPlugin.bundlePlugin.archiveFile
 
   keystore 'gcs.client.repositories_metering.credentials_file', serviceAccountFile, IGNORE_VALUE
   if (useFixture) {

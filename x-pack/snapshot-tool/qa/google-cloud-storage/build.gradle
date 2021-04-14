@@ -8,7 +8,7 @@ import java.nio.file.Files
 apply plugin: 'elasticsearch.build'
 
 dependencies {
-  api project(":plugins:repository-gcs")
+  //api project(":plugins:repository-gcs")
   testImplementation project(":test:framework")
   testImplementation project(':x-pack:snapshot-tool')
   testImplementation files(project(':x-pack:snapshot-tool').sourceSets.test.output)
@@ -27,8 +27,8 @@ String gcsBucket = System.getenv("google_storage_bucket")
 String gcsBasePath = System.getenv("google_storage_base_path")
 
 if (!gcsServiceAccount && !gcsBucket && !gcsBasePath) {
-  gcsServiceAccount = new File(project(':plugins:repository-gcs').buildDir,
-    'generated-resources/service_account_test.json').path
+//  gcsServiceAccount = new File(project(':plugins:repository-gcs').buildDir,
+//    'generated-resources/service_account_test.json').path
   gcsBucket = 'bucket_test'
   gcsBasePath = 'integration_test'
 

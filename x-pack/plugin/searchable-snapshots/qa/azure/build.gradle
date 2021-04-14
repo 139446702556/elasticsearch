@@ -6,11 +6,11 @@ apply plugin: 'elasticsearch.rest-test'
 apply plugin: 'elasticsearch.rest-resources'
 
 final Project fixture = project(':test:fixtures:azure-fixture')
-final Project repositoryPlugin = project(':plugins:repository-azure')
+//final Project repositoryPlugin = project(':plugins:repository-azure')
 
 dependencies {
   testImplementation project(path: xpackModule('searchable-snapshots'), configuration: 'testArtifacts')
-  testImplementation repositoryPlugin
+  //testImplementation repositoryPlugin
 }
 
 restResources {
@@ -49,7 +49,7 @@ integTest {
 
 testClusters.integTest {
   testDistribution = 'DEFAULT'
-  plugin repositoryPlugin.path
+  //plugin repositoryPlugin.path
 
   keystore 'azure.client.searchable_snapshots.account', azureAccount
   if (azureKey != null && azureKey.isEmpty() == false) {

@@ -389,6 +389,9 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
     private static Set<Bundle> findBundles(final Path directory, String type) throws IOException {
         final Set<Bundle> bundles = new HashSet<>();
         for (final Path plugin : findPluginDirs(directory)) {
+            if (plugin.toFile().isFile()){
+                continue;
+            }
             final Bundle bundle = readPluginBundle(bundles, plugin, type);
             bundles.add(bundle);
         }

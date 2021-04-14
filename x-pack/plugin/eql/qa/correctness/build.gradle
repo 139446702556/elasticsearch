@@ -33,10 +33,10 @@ Boolean preserveData = providers.systemProperty('eql.test.preserve.data')
 
 testClusters {
   all {
-    plugin ':plugins:repository-gcs'
-    if (serviceAccountFile) {
-      keystore 'gcs.client.eql_test.credentials_file', serviceAccountFile
-    }
+//    plugin ':plugins:repository-gcs'
+//    if (serviceAccountFile) {
+//      keystore 'gcs.client.eql_test.credentials_file', serviceAccountFile
+//    }
     if (preserveData) {
       preserveDataDir = true
     }

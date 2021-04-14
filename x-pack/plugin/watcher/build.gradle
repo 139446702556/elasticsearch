@@ -27,7 +27,7 @@ dependencies {
   compileOnly project(':modules:lang-painless:spi')
   compileOnly project(path: xpackModule('core'), configuration: 'default')
   compileOnly project(path: ':modules:transport-netty4')
-  compileOnly project(path: ':plugins:transport-nio')
+  //compileOnly project(path: ':plugins:transport-nio')
 
   testImplementation project(path: xpackModule('core'), configuration: 'testArtifacts')
   testImplementation project(xpackModule('ilm'))
