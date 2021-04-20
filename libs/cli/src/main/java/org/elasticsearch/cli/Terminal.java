@@ -45,6 +45,7 @@ public abstract class Terminal {
     private static final PrintWriter ERROR_WRITER = newErrorWriter();
 
     /** The default terminal implementation, which will be a console if available, or stdout/stderr if not. */
+    //默认终端实现， 如果控制台终端可用，则为控制台输出，否则为标准输出/标准错误
     public static final Terminal DEFAULT = ConsoleTerminal.isSupported() ? new ConsoleTerminal() : new SystemTerminal();
 
     @SuppressForbidden(reason = "Writer for System.err")
@@ -53,9 +54,13 @@ public abstract class Terminal {
     }
 
     /** Defines the available verbosity levels of messages to be printed. */
+    //定义了要打印消息的详细程度
     public enum Verbosity {
+        //总是打印
         SILENT, /* always printed */
+        //当没有给cli选项时打印
         NORMAL, /* printed when no options are given to cli */
+        //向cli传递verbose时打印
         VERBOSE /* printed only when cli is passed verbose option */
     }
 

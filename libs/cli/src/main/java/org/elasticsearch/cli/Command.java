@@ -32,6 +32,7 @@ import java.util.Arrays;
 
 /**
  * An action to execute within a cli.
+ * 在client中执行的操作
  */
 public abstract class Command implements Closeable {
 
@@ -40,7 +41,7 @@ public abstract class Command implements Closeable {
 
     private final Runnable beforeMain;
 
-    /** The option parser for this command. */
+    /** The option parser for this command. 创建此命令中的选项解析器，此解析器支持解析长命令的缩写 */
     protected final OptionParser parser = new OptionParser();
 
     private final OptionSpec<Void> helpOption = parser.acceptsAll(Arrays.asList("h", "help"), "Show help").forHelp();
@@ -62,13 +63,17 @@ public abstract class Command implements Closeable {
     private Thread shutdownHookThread;
 
     /** Parses options for this command from args and executes it. */
+    //从args中解析此命令中的选项并执行
     public final int main(String[] args, Terminal terminal) throws Exception {
+        //是否安装shutdown钩子
         if (addShutdownHook()) {
-
+            //设置在系统关闭时，钩子要执行的任务
             shutdownHookThread = new Thread(() -> {
                 try {
+                    //关闭当前命令行
                     this.close();
                 } catch (final IOException e) {
+                    //通过指定终端来输出对应错误信息
                     try (
                         StringWriter sw = new StringWriter();
                         PrintWriter pw = new PrintWriter(sw)) {
@@ -81,12 +86,14 @@ public abstract class Command implements Closeable {
                     }
                 }
             });
+            //将创建的关闭钩子方法添加到当前运行的上下文容器中
             Runtime.getRuntime().addShutdownHook(shutdownHookThread);
         }
-
+        //执行需要在main方法执行之前的前置操作
         beforeMain.run();
 
         try {
+            //通过启动main方法来执行给定的全部命令，如果遇到错误会全部抛出
             mainWithoutErrorHandling(args, terminal);
         } catch (OptionException e) {
             // print help to stderr on exceptions
@@ -107,15 +114,18 @@ public abstract class Command implements Closeable {
 
     /**
      * Executes the command, but all errors are thrown.
+     * 解析当前给定的命令并执行，如果遇到错误会全部抛出
      */
     void mainWithoutErrorHandling(String[] args, Terminal terminal) throws Exception {
+        //使用根据给定的选项规范创建的解析器来解析命令行中的参数
         final OptionSet options = parser.parse(args);
 
+        //判断此次命令是否为help命令，如果是，则输出相关帮助信息，并且终止执行
         if (options.has(helpOption)) {
             printHelp(terminal, false);
             return;
         }
-
+        //根据传给cli不同的参数来打印出不同的详细信息
         if (options.has(silentOption)) {
             terminal.setVerbosity(Terminal.Verbosity.SILENT);
         } else if (options.has(verboseOption)) {
@@ -123,11 +133,12 @@ public abstract class Command implements Closeable {
         } else {
             terminal.setVerbosity(Terminal.Verbosity.NORMAL);
         }
-
+        //执行命令
         execute(terminal, options);
     }
 
     /** Prints a help message for the command to the terminal. */
+    //将参数命令的帮助信息打印到终端上
     private void printHelp(Terminal terminal, boolean toStdError) throws IOException {
         if (toStdError) {
             terminal.errorPrintln(description);
@@ -158,6 +169,7 @@ public abstract class Command implements Closeable {
     /**
      * Return whether or not to install the shutdown hook to cleanup resources on exit. This method should only be overridden in test
      * classes.
+     * 是否安装shutdown钩子，以确保在系统关闭时来清除资源
      *
      * @return whether or not to install the shutdown hook
      */

@@ -51,13 +51,14 @@ class Elasticsearch extends EnvironmentAwareCommand {
     private final OptionSpecBuilder quietOption;
 
     // visible for testing
+    //设置命令行中可以使用的各个选项，及其相应规则
     Elasticsearch() {
         super("Starts Elasticsearch", () -> {}); // we configure logging later so we override the base class from configuring logging
         versionOption = parser.acceptsAll(Arrays.asList("V", "version"),
             "Prints Elasticsearch version information and exits");
         daemonizeOption = parser.acceptsAll(Arrays.asList("d", "daemonize"),
             "Starts Elasticsearch in the background")
-            .availableUnless(versionOption);
+            .availableUnless(versionOption); //如果命令行中没有versionOption选项，则可以使用d选项
         pidfileOption = parser.acceptsAll(Arrays.asList("p", "pidfile"),
             "Creates a pid file in the specified path on start")
             .availableUnless(versionOption)
@@ -82,22 +83,30 @@ class Elasticsearch extends EnvironmentAwareCommand {
          * We want the JVM to think there is a security manager installed so that if internal policy decisions that would be based on the
          * presence of a security manager or lack thereof act as if there is a security manager present (e.g., DNS cache policy). This
          * forces such policies to take effect immediately.
+         * 我们希望JVM认为已经安装了安全管理器，这样，如果基于安全管理器的存在或没有安全管理器的内部策略决策，就像存在安全管理器一样行事(例如，DNS缓存策略)。这迫使这些政策立即生效
          */
         System.setSecurityManager(new SecurityManager() {
 
             @Override
             public void checkPermission(Permission perm) {
                 // grant all permissions so that we can later set the security manager to the one that we want
+                //此处设置一个空方法的安全管理器是为了授予所有权限给我们，以便后续可以根据我们的具体需要设置对应的权限
             }
 
         });
+        //设置错误监听器，在发生错误时修改错误标识
         LogConfigurator.registerErrorListener();
+        //初始化Elasticsearch对象，设置相关命令行参数的定义和解析规则
         final Elasticsearch elasticsearch = new Elasticsearch();
+        //启动Elasticsearch服务
         int status = main(args, elasticsearch, Terminal.DEFAULT);
+        //检测启动状态是否成功
         if (status != ExitCodes.OK) {
+            //从系统属性中获取日志路径
             final String basePath = System.getProperty("es.logs.base_path");
             // It's possible to fail before logging has been configured, in which case there's no point
             // suggesting that the user look in the log file.
+            //因为在配置日志记录之前，可能会发生错误失败，因此没必要查看日志记录文件，直接通过控制台终端输出信息
             if (basePath != null) {
                 Terminal.DEFAULT.errorPrintln(
                     "ERROR: Elasticsearch did not exit normally - check the logs at "
@@ -106,10 +115,11 @@ class Elasticsearch extends EnvironmentAwareCommand {
                         + System.getProperty("es.logs.cluster_name") + ".log"
                 );
             }
+            //退出系统进程
             exit(status);
         }
     }
-
+    //从系统属性当中获取网络地址缓存的ttl相关属性值
     private static void overrideDnsCachePolicyProperties() {
         for (final String property : new String[] {"networkaddress.cache.ttl", "networkaddress.cache.negative.ttl" }) {
             final String overrideProperty = "es." + property;

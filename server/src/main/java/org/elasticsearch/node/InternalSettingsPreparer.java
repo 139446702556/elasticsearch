@@ -54,7 +54,7 @@ public class InternalSettingsPreparer {
 
     /**
      * Prepares the settings by gathering all elasticsearch system properties, optionally loading the configuration settings.
-     *
+     * 通过收集elasticsearch的全部系统属性来准备设置，可以选择加载配置设置
      * @param input      the custom settings to use; these are not overwritten by settings in the configuration file
      * @param properties map of properties key/value pairs (usually from the command-line)
      * @param configPath path to config directory; (use null to indicate the default)

@@ -88,6 +88,7 @@ public class LogConfigurator {
     /**
      * Registers a listener for status logger errors. This listener should be registered as early as possible to ensure that no errors are
      * logged by the status logger before logging is configured.
+     * 注册错误监听器
      */
     public static void registerErrorListener() {
         error.set(false);
