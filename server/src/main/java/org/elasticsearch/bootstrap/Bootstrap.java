@@ -76,24 +76,30 @@ final class Bootstrap {
 
     private static volatile Bootstrap INSTANCE;
     private volatile Node node;
+    //主线程（前台线程）终止执行的阀门
     private final CountDownLatch keepAliveLatch = new CountDownLatch(1);
     private final Thread keepAliveThread;
     private final Spawner spawner = new Spawner();
 
     /** creates a new instance */
     Bootstrap() {
+        //创建一个维持链接的线程
         keepAliveThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    //等待阀门打开
                     keepAliveLatch.await();
                 } catch (InterruptedException e) {
                     // bail out
                 }
             }
         }, "elasticsearch[keepAlive/" + Version.CURRENT + "]");
+        //设置为前台线程
         keepAliveThread.setDaemon(false);
         // keep this thread alive (non daemon thread) until we shutdown
+        //保持这个前台线程处于活跃状态，直到我们终止服务
+        //注册shutdown的hook（钩子），保证在我们终止服务时结束这个前台线程
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -334,6 +340,7 @@ final class Bootstrap {
 
     /**
      * This method is invoked by {@link Elasticsearch#main(String[])} to startup elasticsearch.
+     * 启动elasticsearch服务
      */
     static void init(
             final boolean foreground,
@@ -342,8 +349,9 @@ final class Bootstrap {
             final Environment initialEnv) throws BootstrapException, NodeValidationException, UserException {
         // force the class initializer for BootstrapInfo to run before
         // the security manager is installed
+        //在安装安全管理器之前强制运行BootstrapInfo的类初始化器（目前为空方法）
         BootstrapInfo.init();
-
+        //创建启动服务的引导实例化对象
         INSTANCE = new Bootstrap();
 
         final SecureSettings keystore = loadSecureSettings(initialEnv);

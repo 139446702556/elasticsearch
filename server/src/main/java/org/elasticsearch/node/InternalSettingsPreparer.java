@@ -64,7 +64,9 @@ public class InternalSettingsPreparer {
     public static Environment prepareEnvironment(Settings input, Map<String, String> properties,
             Path configPath, Supplier<String> defaultNodeName) {
         // just create enough settings to build the environment, to get the config dir
+        //创建设置构造器对象
         Settings.Builder output = Settings.builder();
+        //初始化构造器对象
         initializeSettings(output, input, properties);
         Environment environment = new Environment(output.build(), configPath);
 
@@ -97,6 +99,7 @@ public class InternalSettingsPreparer {
     /**
      * Initializes the builder with the given input settings, and applies settings from the specified map (these settings typically come
      * from the command line).
+     * 使用给定的输入设置来初始化Settings对象的构造器，并对其中的占位符进行解析替换
      *
      * @param output the settings builder to apply the input and default settings to
      * @param input the input settings

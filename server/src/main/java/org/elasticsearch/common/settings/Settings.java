@@ -1136,35 +1136,42 @@ public final class Settings implements ToXContentFragment {
 
         // visible for testing
         Builder replacePropertyPlaceholders(Function<String, String> getenv) {
+            //设置属性占位符对象，及其对应解析器（解析器的内容是通过先查找当前系统环境变量中是否存在，如果不存在在查找自定义配置属性中是否存在，都不存在则返回null）
             PropertyPlaceholder propertyPlaceholder = new PropertyPlaceholder("${", "}", false);
             PropertyPlaceholder.PlaceholderResolver placeholderResolver = new PropertyPlaceholder.PlaceholderResolver() {
                 @Override
                 public String resolvePlaceholder(String placeholderName) {
+                    //先从当前系统环境中查找
                     final String value = getenv.apply(placeholderName);
                     if (value != null) {
                         return value;
                     }
+                    //系统环境不存在，再从自定义配置中找
                     return Settings.toString(map.get(placeholderName));
                 }
 
                 @Override
                 public boolean shouldIgnoreMissing(String placeholderName) {
+                    //忽略以prompt.开头无法解析的占位符
                     return placeholderName.startsWith("prompt.");
                 }
 
                 @Override
                 public boolean shouldRemoveMissingPlaceholder(String placeholderName) {
+                    //删除不已prompt.开头的无法解析的占位符
                     return !placeholderName.startsWith("prompt.");
                 }
             };
-
+            //遍历设置的属性，并对其中的占位符进行替换
             Iterator<Map.Entry<String, Object>> entryItr = map.entrySet().iterator();
             while (entryItr.hasNext()) {
                 Map.Entry<String, Object> entry = entryItr.next();
+                //如果属性值为空，则不用处理
                 if (entry.getValue() == null) {
                     // a null value obviously can't be replaced
                     continue;
                 }
+                //值为集合，遍历，对其值的内容中的占位符进行解析替换
                 if (entry.getValue() instanceof List) {
                     final ListIterator<String> li = ((List<String>) entry.getValue()).listIterator();
                     while (li.hasNext()) {
@@ -1174,7 +1181,7 @@ public final class Settings implements ToXContentFragment {
                     }
                     continue;
                 }
-
+                //设置的属性值不为集合，则直接进行占位符解析，将解析成功的占位符进行替换，失败的直接移除
                 String value = propertyPlaceholder.replacePlaceholders(Settings.toString(entry.getValue()), placeholderResolver);
                 // if the values exists and has length, we should maintain it  in the map
                 // otherwise, the replace process resolved into removing it

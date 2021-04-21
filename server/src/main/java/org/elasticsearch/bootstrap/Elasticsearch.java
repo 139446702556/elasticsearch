@@ -142,9 +142,11 @@ class Elasticsearch extends EnvironmentAwareCommand {
 
     @Override
     protected void execute(Terminal terminal, OptionSet options, Environment env) throws UserException {
+        //检测命令行中的命令是否存在非选项的参数，如果存在抛出异常
         if (options.nonOptionArguments().isEmpty() == false) {
             throw new UserException(ExitCodes.USAGE, "Positional arguments not allowed, found " + options.nonOptionArguments());
         }
+        //是否存在version参数，存在则输出版本信息，并终止运行
         if (options.has(versionOption)) {
             final String versionOutput = String.format(
                 Locale.ROOT,
@@ -159,19 +161,23 @@ class Elasticsearch extends EnvironmentAwareCommand {
             terminal.println(versionOutput);
             return;
         }
-
+        //判断是否有daemonize选项（守护进程运行）
         final boolean daemonize = options.has(daemonizeOption);
+        //获取pidfile选项设置的文件路径，如果未设置则为null
         final Path pidFile = pidfileOption.value(options);
+        //是否存在quiet选项
         final boolean quiet = options.has(quietOption);
 
         // a misconfigured java.io.tmpdir can cause hard-to-diagnose problems later, so reject it immediately
         try {
+            //检测设置的tmpdir路径指定的是否为目录，是否存在，如果不是目录或者不存在，则发生异常（tmpdir未设置会自动生成）
             env.validateTmpFile();
         } catch (IOException e) {
             throw new UserException(ExitCodes.CONFIG, e.getMessage());
         }
 
         try {
+            //启动服务
             init(daemonize, pidFile, quiet, env);
         } catch (NodeValidationException e) {
             throw new UserException(ExitCodes.CONFIG, e.getMessage());
