@@ -25,6 +25,7 @@ import java.util.Objects;
 
 /**
  * A String implementations which allows clearing the underlying char array.
+ * 允许清除基础字符数组的字符串实现
  */
 public final class SecureString implements CharSequence, Closeable {
 
@@ -103,6 +104,7 @@ public final class SecureString implements CharSequence, Closeable {
 
     /**
      * Closes the string by clearing the underlying char array.
+     * 通过清除字符串中的字符数组内容，来释放资源
      */
     @Override
     public synchronized void close() {

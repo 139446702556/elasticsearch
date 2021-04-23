@@ -1005,6 +1005,7 @@ public final class Settings implements ToXContentFragment {
 
         /**
          * Sets all the provided settings including secure settings
+         * 设置全部提供的设置，包括安全设置
          */
         public Builder put(Settings settings) {
             return put(settings, true);
@@ -1012,6 +1013,7 @@ public final class Settings implements ToXContentFragment {
 
         /**
          * Sets all the provided settings.
+         * 设置所有提供的设置
          * @param settings the settings to set
          * @param copySecureSettings if <code>true</code> all settings including secure settings are copied.
          */

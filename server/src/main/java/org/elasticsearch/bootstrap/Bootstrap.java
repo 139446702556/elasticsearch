@@ -109,6 +109,7 @@ final class Bootstrap {
     }
 
     /** initialize native resources */
+    //初始化本地资源
     public static void initializeNatives(Path tmpFile, boolean mlockAll, boolean systemCallFilter, boolean ctrlHandler) {
         final Logger logger = LogManager.getLogger(Bootstrap.class);
 
@@ -176,6 +177,7 @@ final class Bootstrap {
         Settings settings = environment.settings();
 
         try {
+            //加载当前服务模块目录下的全部插件的本地控制器，并为其创建相应的启动进程（将输入输出流挂在到jvm上）
             spawner.spawnNativeControllers(environment, true);
         } catch (IOException e) {
             throw new BootstrapException(e);
@@ -243,11 +245,12 @@ final class Bootstrap {
     static SecureSettings loadSecureSettings(Environment initialEnv) throws BootstrapException {
         final KeyStoreWrapper keystore;
         try {
+            //加载elasticsearch.keystore文件并解析得到KeyStoreWrapper对象
             keystore = KeyStoreWrapper.load(initialEnv.configFile());
         } catch (IOException e) {
             throw new BootstrapException(e);
         }
-
+        //获取安全认证密码
         SecureString password;
         try {
             if (keystore != null && keystore.hasPassword()) {
@@ -260,17 +263,20 @@ final class Bootstrap {
         }
 
         try{
+            //如果配置目录下没有密钥存储库文件，则创建，并将生成密钥写入
             if (keystore == null) {
                 final KeyStoreWrapper keyStoreWrapper = KeyStoreWrapper.create();
                 keyStoreWrapper.save(initialEnv.configFile(), new char[0]);
                 return keyStoreWrapper;
             } else {
+                //如果存在存储库文件，则对其进行解密，并在需要的情况下对其格式进行升级
                 keystore.decrypt(password.getChars());
                 KeyStoreWrapper.upgrade(keystore, initialEnv.configFile(), password.getChars());
             }
         } catch (Exception e) {
             throw new BootstrapException(e);
         } finally {
+            //释放资源
             password.close();
         }
         return keystore;
@@ -306,14 +312,19 @@ final class Bootstrap {
             final SecureSettings secureSettings,
             final Settings initialSettings,
             final Path configPath) {
+        //创建设置构建器
         Settings.Builder builder = Settings.builder();
+        //将pidfile设置添加到构建器中
         if (pidFile != null) {
             builder.put(Environment.NODE_PIDFILE_SETTING.getKey(), pidFile);
         }
+        //将初始化设置（启动参数中的设置，以及配置文件配置的设置）添加到构建器中
         builder.put(initialSettings);
+        //将安全设置添加到构建器中
         if (secureSettings != null) {
             builder.setSecureSettings(secureSettings);
         }
+        //解析全部配置（命令行、系统属性、系统环境变量以及服务配置文件），并创建Environment对象，返回
         return InternalSettingsPreparer.prepareEnvironment(builder.build(), Collections.emptyMap(), configPath,
                 // HOSTNAME is set by elasticsearch-env and elasticsearch-env.bat so it is always available
                 () -> System.getenv("HOSTNAME"));
@@ -353,16 +364,20 @@ final class Bootstrap {
         BootstrapInfo.init();
         //创建启动服务的引导实例化对象
         INSTANCE = new Bootstrap();
-
+        //通过加载配置路径下的elasticsearch.keystore文件来获取到服务的安全设置
         final SecureSettings keystore = loadSecureSettings(initialEnv);
+        //解析全部配置，并创建Environment对象
         final Environment environment = createEnvironment(pidFile, keystore, initialEnv.settings(), initialEnv.configFile());
-
+        //配置日志中的节点名称为当前设置中的节点名称
         LogConfigurator.setNodeName(Node.NODE_NAME_SETTING.get(environment.settings()));
         try {
+            //通过我们对服务的一些配置，来对logger对象进行配置 （logger配置失败，直接终止服务）
             LogConfigurator.configure(environment);
         } catch (IOException e) {
             throw new BootstrapException(e);
         }
+        //从系统属性java.specification.version中获取当前系统环境变量下使用的jdk版本
+        //启动此版本的服务需要jdk11以上的版本
         if (JavaVersion.current().compareTo(JavaVersion.parse("11")) < 0) {
             final String message = String.format(
                             Locale.ROOT,
@@ -371,6 +386,7 @@ final class Bootstrap {
                             System.getProperty("java.home"));
             DeprecationLogger.getLogger(Bootstrap.class).deprecate("java_version_11_required", message);
         }
+        //如果配置了pidfile路径，则进行创建,并将服务进程的pid写入
         if (environment.pidFile() != null) {
             try {
                 PidFile.create(environment.pidFile(), true);
@@ -378,9 +394,10 @@ final class Bootstrap {
                 throw new BootstrapException(e);
             }
         }
-
+        //如果服务是守护进程运行，或者是静音模式，则关闭标准输出流
         final boolean closeStandardStreams = (foreground == false) || quiet;
         try {
+            //从当前root logger对象中移除标准输出流（ConsoleAppender和system.out）
             if (closeStandardStreams) {
                 final Logger rootLogger = LogManager.getRootLogger();
                 final Appender maybeConsoleAppender = Loggers.findAppender(rootLogger, ConsoleAppender.class);
@@ -391,17 +408,20 @@ final class Bootstrap {
             }
 
             // fail if somebody replaced the lucene jars
+            //检测当前使用的lucene jar版本是否与当前服务要求匹配
             checkLucene();
 
             // install the default uncaught exception handler; must be done before security is
             // initialized as we do not want to grant the runtime permission
             // setDefaultUncaughtExceptionHandler
+            //安装默认的未捕获异常处理器，必须在安全性初始化之前进行设置，因为我们不想授予其运行时权限
             Thread.setDefaultUncaughtExceptionHandler(new ElasticsearchUncaughtExceptionHandler());
 
             INSTANCE.setup(true, environment);
 
             try {
                 // any secure settings must be read during node construction
+                //释放安全设置资源
                 IOUtils.close(keystore);
             } catch (IOException e) {
                 throw new BootstrapException(e);
@@ -414,6 +434,7 @@ final class Bootstrap {
             // running via systemd, the init script only specifies
             // `--quiet`, not `-d`, so we want users to be able to see
             // startup errors via journalctl.
+            //如果服务是后台运行的，则关闭system.err输出流
             if (foreground == false) {
                 closeSysError();
             }

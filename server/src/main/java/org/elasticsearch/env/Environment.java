@@ -100,33 +100,38 @@ public class Environment {
     // Should only be called directly by this class's unit tests
     Environment(final Settings settings, final Path configPath, final boolean nodeLocalStorage, final Path tmpPath) {
         final Path homeFile;
+        //从设置中获取home目录的路径
         if (PATH_HOME_SETTING.exists(settings)) {
             homeFile = PathUtils.get(PATH_HOME_SETTING.get(settings)).toAbsolutePath().normalize();
         } else {
             throw new IllegalStateException(PATH_HOME_SETTING.getKey() + " is not configured");
         }
-
+        //获取并设置服务的配置文件路径
         if (configPath != null) {
             configFile = configPath.toAbsolutePath().normalize();
         } else {
             configFile = homeFile.resolve("config");
         }
-
+        //设置临时文件路径
         tmpFile = Objects.requireNonNull(tmpPath);
-
+        //通过home目录来解析获取插件目录路径
         pluginsFile = homeFile.resolve("plugins");
-
+        //从配置的设置中获取数据存储路径（可以设置多个，以逗号隔开）
         List<String> dataPaths = PATH_DATA_SETTING.get(settings);
+        //节点数据是在本地存储
         if (nodeLocalStorage) {
+            //配置了数据路径，则使用进行设置
             if (dataPaths.isEmpty() == false) {
                 dataFiles = new Path[dataPaths.size()];
                 for (int i = 0; i < dataPaths.size(); i++) {
                     dataFiles[i] = PathUtils.get(dataPaths.get(i)).toAbsolutePath().normalize();
                 }
             } else {
+                //如果未配置数据路径，则默认使用home目录下的data目录为默认的数据目录
                 dataFiles = new Path[]{homeFile.resolve("data")};
             }
         } else {
+            //如果数据为非本地存储，则不应该配置数据目录,否则抛出异常
             if (dataPaths.isEmpty()) {
                 dataFiles = EMPTY_PATH_ARRAY;
             } else {
@@ -134,11 +139,13 @@ public class Environment {
                 throw new IllegalStateException("node does not require local storage yet path.data is set to [" + paths + "]");
             }
         }
+        //配置共享数据目录
         if (PATH_SHARED_DATA_SETTING.exists(settings)) {
             sharedDataFile = PathUtils.get(PATH_SHARED_DATA_SETTING.get(settings)).toAbsolutePath().normalize();
         } else {
             sharedDataFile = null;
         }
+        //设置共享仓库的位置（绝对路径）
         List<String> repoPaths = PATH_REPO_SETTING.get(settings);
         if (repoPaths.isEmpty()) {
             repoFiles = EMPTY_PATH_ARRAY;
@@ -150,22 +157,23 @@ public class Environment {
         }
 
         // this is trappy, Setting#get(Settings) will get a fallback setting yet return false for Settings#exists(Settings)
+        //设置服务log的存放目录，默认为home目录下的logs文件夹中
         if (PATH_LOGS_SETTING.exists(settings)) {
             logsFile = PathUtils.get(PATH_LOGS_SETTING.get(settings)).toAbsolutePath().normalize();
         } else {
             logsFile = homeFile.resolve("logs");
         }
-
+        //设置节点pidfile的位置
         if (NODE_PIDFILE_SETTING.exists(settings) || PIDFILE_SETTING.exists(settings)) {
             pidFile = PathUtils.get(NODE_PIDFILE_SETTING.get(settings)).toAbsolutePath().normalize();
         } else {
             pidFile = null;
         }
-
+        //配置bin、lib和modules文件夹的位置
         binFile = homeFile.resolve("bin");
         libFile = homeFile.resolve("lib");
         modulesFile = homeFile.resolve("modules");
-
+        //将上述服务相关配置整合，并设置到当前变量的settings属性对象中
         final Settings.Builder finalSettings = Settings.builder().put(settings);
         if (PATH_DATA_SETTING.exists(settings)) {
             finalSettings.putList(PATH_DATA_SETTING.getKey(), Arrays.stream(dataFiles).map(Path::toString).collect(Collectors.toList()));

@@ -112,6 +112,7 @@ public class LogConfigurator {
      * Configure logging reading from any log4j2.properties found in the config directory and its
      * subdirectories from the specified environment. Will also configure logging to point the logs
      * directory from the specified environment.
+     * 通过指定环境的config目录以及其子目录下找到对应的属性设置，以及日志的输出目录，来对log4j2进行配置
      *
      * @param environment the environment for reading configs and the logs path
      * @throws IOException   if there is an issue readings any log4j2.properties in the config
@@ -122,16 +123,20 @@ public class LogConfigurator {
         Objects.requireNonNull(environment);
         try {
             // we are about to configure logging, check that the status logger did not log any error-level messages
+            //我们将要配置logger对象，检测在这之前是否在状态日志记录器中发生过任何级别的错误
             checkErrorListener();
         } finally {
             // whether or not the error listener check failed we can remove the listener now
+            //移除错误监听器
             StatusLogger.getLogger().removeListener(ERROR_LISTENER);
         }
+        //配置log对象
         configure(environment.settings(), environment.configFile(), environment.logsFile());
     }
 
     /**
      * Load logging plugins so we can have {@code node_name} in the pattern.
+     * 加载log4j日志插件
      */
     public static void loadLog4jPlugins() {
         PluginManager.addPackage(LogConfigurator.class.getPackage().getName());
@@ -147,7 +152,9 @@ public class LogConfigurator {
     }
 
     private static void checkErrorListener() {
+        //是否注册了错误输出监听器
         assert errorListenerIsRegistered() : "expected error listener to be registered";
+        //判断在logger对象配置之前是否发生了错误
         if (error.get()) {
             throw new IllegalStateException("status logger logged an error before logging was configured");
         }

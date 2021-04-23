@@ -142,14 +142,15 @@ public class PluginInfo implements Writeable, ToXContentObject {
 
     /**
      * Reads the plugin descriptor file.
-     *
+     * 读取插件描述信息文件
      * @param path           the path to the root directory for the plugin
      * @return the plugin info
      * @throws IOException if an I/O exception occurred reading the plugin descriptor
      */
     public static PluginInfo readFromProperties(final Path path) throws IOException {
+        //获取给定模块路径下的插件描述属性文件路径
         final Path descriptor = path.resolve(ES_PLUGIN_PROPERTIES);
-
+        //加载插件属性文件
         final Map<String, String> propsMap;
         {
             final Properties props = new Properties();
@@ -158,41 +159,46 @@ public class PluginInfo implements Writeable, ToXContentObject {
             }
             propsMap = props.stringPropertyNames().stream().collect(Collectors.toMap(Function.identity(), props::getProperty));
         }
-
+        //从插件的属性文件中进行检查
+        //检测name是否设置
         final String name = propsMap.remove("name");
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException(
                     "property [name] is missing in [" + descriptor + "]");
         }
+        //检测description是否设置
         final String description = propsMap.remove("description");
         if (description == null) {
             throw new IllegalArgumentException(
                     "property [description] is missing for plugin [" + name + "]");
         }
+        //检测version是否设置
         final String version = propsMap.remove("version");
         if (version == null) {
             throw new IllegalArgumentException(
                     "property [version] is missing for plugin [" + name + "]");
         }
-
+        //检测elasticsearch.version是否设置
         final String esVersionString = propsMap.remove("elasticsearch.version");
         if (esVersionString == null) {
             throw new IllegalArgumentException(
                     "property [elasticsearch.version] is missing for plugin [" + name + "]");
         }
+        //解析检测是否设置java.version
         final Version esVersion = Version.fromString(esVersionString);
         final String javaVersionString = propsMap.remove("java.version");
         if (javaVersionString == null) {
             throw new IllegalArgumentException(
                     "property [java.version] is missing for plugin [" + name + "]");
         }
+        //检测是否设置classname
         JarHell.checkVersionFormat(javaVersionString);
         final String classname = propsMap.remove("classname");
         if (classname == null) {
             throw new IllegalArgumentException(
                     "property [classname] is missing for plugin [" + name + "]");
         }
-
+        //获取扩展插件信息
         final String extendedString = propsMap.remove("extended.plugins");
         final List<String> extendedPlugins;
         if (extendedString == null) {
@@ -200,7 +206,7 @@ public class PluginInfo implements Writeable, ToXContentObject {
         } else {
             extendedPlugins = Arrays.asList(Strings.delimitedListToStringArray(extendedString, ","));
         }
-
+        //获取has.native.controller属性，未设置默认为false
         final String hasNativeControllerValue = propsMap.remove("has.native.controller");
         final boolean hasNativeController;
         if (hasNativeControllerValue == null) {
@@ -224,15 +230,15 @@ public class PluginInfo implements Writeable, ToXContentObject {
                     throw new IllegalArgumentException(message);
             }
         }
-
+        //es6.0.0到6.3.0版本移除requires.keystore属性设置
         if (esVersion.before(Version.V_6_3_0) && esVersion.onOrAfter(Version.V_6_0_0_beta2)) {
             propsMap.remove("requires.keystore");
         }
-
+        //存在未知插件属性设置，则抛出异常
         if (propsMap.isEmpty() == false) {
             throw new IllegalArgumentException("Unknown properties in plugin descriptor: " + propsMap.keySet());
         }
-
+        //创建插件属性信息对象，并返回
         return new PluginInfo(name, description, version, esVersion, javaVersionString,
                               classname, extendedPlugins, hasNativeController);
     }

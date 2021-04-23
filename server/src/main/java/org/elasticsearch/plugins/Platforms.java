@@ -36,6 +36,7 @@ public class Platforms {
 
     /**
      * The path to the native controller for a plugin with native components.
+     * 获取本地组件插件的本地控制器路径
      */
     public static Path nativeControllerPath(Path plugin) {
         if (Constants.MAC_OS_X) {

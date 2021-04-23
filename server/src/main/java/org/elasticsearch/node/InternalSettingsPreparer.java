@@ -66,10 +66,11 @@ public class InternalSettingsPreparer {
         // just create enough settings to build the environment, to get the config dir
         //创建设置构造器对象
         Settings.Builder output = Settings.builder();
-        //初始化构造器对象
+        //初始化构造器对象（将已经存在的配置添加整合到构造器对象中，并对其中的占位符进行解析替换）
         initializeSettings(output, input, properties);
+        //通过当前的全部设置（系统属性、环境变量和命令行）来创建环境的实例化变量
         Environment environment = new Environment(output.build(), configPath);
-
+        //es 5.5.0版本以上的服务统一使用yml文件进行配置，禁止使用yaml和json文件，在此检测存在则抛出异常
         if (Files.exists(environment.configFile().resolve("elasticsearch.yaml"))) {
             throw new SettingsException("elasticsearch.yaml was deprecated in 5.5.0 and must be renamed to elasticsearch.yml");
         }
@@ -77,9 +78,11 @@ public class InternalSettingsPreparer {
         if (Files.exists(environment.configFile().resolve("elasticsearch.json"))) {
             throw new SettingsException("elasticsearch.json was deprecated in 5.5.0 and must be converted to elasticsearch.yml");
         }
-
+        //创建一个新的设置构建器,用来存储服务的配置文件的内容
         output = Settings.builder(); // start with a fresh output
+        //获取服务的配置文件elasticsearch.yml的路径
         Path path = environment.configFile().resolve("elasticsearch.yml");
+        //加载服务配置文件的内容到output对象中
         if (Files.exists(path)) {
             try {
                 output.loadFromPath(path);
@@ -89,10 +92,13 @@ public class InternalSettingsPreparer {
         }
 
         // re-initialize settings now that the config file has been loaded
+        //配置文件的设置已经加载，重新进行初始化settings
         initializeSettings(output, input, properties);
+        //检查设置，以确保其中不存在旧的设置方式
         checkSettingsForTerminalDeprecation(output);
+        //进行设置的最终初始化
         finalizeSettings(output, defaultNodeName);
-
+        //通过全部配置创建Environment对象，并返回
         return new Environment(output.build(), configPath);
     }
 
@@ -114,6 +120,7 @@ public class InternalSettingsPreparer {
     /**
      * Checks all settings values to make sure they do not have the old prompt settings. These were deprecated in 6.0.0.
      * This check should be removed in 8.0.0.
+     * 检查配置，以确保其中没有旧的设置方式
      */
     private static void checkSettingsForTerminalDeprecation(final Settings.Builder output) throws SettingsException {
         // This method to be removed in 8.0.0, as it was deprecated in 6.0 and removed in 7.0
@@ -135,25 +142,31 @@ public class InternalSettingsPreparer {
 
     /**
      * Finish preparing settings by replacing forced settings and any defaults that need to be added.
+     * 通过替换强制设置以及需要添加的任何默认设置来完成设置准备工作
      */
     private static void finalizeSettings(Settings.Builder output, Supplier<String> defaultNodeName) {
         // allow to force set properties based on configuration of the settings provided
+        //从当前全部设置中查找出全部强制设置
         List<String> forcedSettings = new ArrayList<>();
         for (String setting : output.keys()) {
             if (setting.startsWith("force.")) {
                 forcedSettings.add(setting);
             }
         }
+        //将全部的强制设置的key进行重新命名（去掉开头的force.）
         for (String forcedSetting : forcedSettings) {
             String value = output.remove(forcedSetting);
             output.put(forcedSetting.substring("force.".length()), value);
         }
+        //解析并替换掉设置中的占位符
         output.replacePropertyPlaceholders();
 
         // put the cluster and node name if they aren't set
+        //设置集群名称，默认为elasticsearch（集群名称不能为，不能包含冒号）
         if (output.get(ClusterName.CLUSTER_NAME_SETTING.getKey()) == null) {
             output.put(ClusterName.CLUSTER_NAME_SETTING.getKey(), ClusterName.CLUSTER_NAME_SETTING.getDefault(Settings.EMPTY).value());
         }
+        //设置节点名称，默认为当前系统的hostname值
         if (output.get(Node.NODE_NAME_SETTING.getKey()) == null) {
             output.put(Node.NODE_NAME_SETTING.getKey(), defaultNodeName.get());
         }

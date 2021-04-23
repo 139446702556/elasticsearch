@@ -78,7 +78,7 @@ final class Natives {
 
     /**
      * Retrieves the short path form of the specified path.
-     *
+     * 检索指定路径的短路径形式
      * @param path the path
      * @return the short path name (or the original path if getting the short path name fails for any reason)
      */

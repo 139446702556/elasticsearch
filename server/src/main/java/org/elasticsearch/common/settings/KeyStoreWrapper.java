@@ -206,17 +206,21 @@ public class KeyStoreWrapper implements SecureSettings {
 
     /**
      * Loads information about the Elasticsearch keystore from the provided config directory.
+     * 从给定的配置目录中加载Elasticsearch密钥存储库的相关信息
      *
      * {@link #decrypt(char[])} must be called before reading or writing any entries.
      * Returns {@code null} if no keystore exists.
      */
     public static KeyStoreWrapper load(Path configDir) throws IOException {
+        //获取elasticsearch.keystore文件的绝对路径
         Path keystoreFile = keystorePath(configDir);
+        //不存在此文件则直接返回
         if (Files.exists(keystoreFile) == false) {
             return null;
         }
-
+        //根据文件目录创建SimpleFSDirectory对象（此对象并发形成差，因为会加全局锁，导致线程串行同步执行）
         SimpleFSDirectory directory = new SimpleFSDirectory(configDir);
+        //读取文件内容并进行密钥解析
         try (IndexInput indexInput = directory.openInput(KEYSTORE_FILENAME, IOContext.READONCE)) {
             ChecksumIndexInput input = new BufferedChecksumIndexInput(indexInput);
             final int formatVersion;
@@ -286,6 +290,7 @@ public class KeyStoreWrapper implements SecureSettings {
     }
 
     /** Upgrades the format of the keystore, if necessary. */
+    //如果需要，则升级密钥存储库的格式
     public static void upgrade(KeyStoreWrapper wrapper, Path configDir, char[] password) throws Exception {
         if (wrapper.getFormatVersion() == FORMAT_VERSION && wrapper.getSettingNames().contains(SEED_SETTING.getKey())) {
             return;
