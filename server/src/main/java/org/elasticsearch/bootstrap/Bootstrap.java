@@ -114,16 +114,19 @@ final class Bootstrap {
         final Logger logger = LogManager.getLogger(Bootstrap.class);
 
         // check if the user is running as root, and bail
+        // 检测当前服务的启动用户是否为root用户（不可以使用root用户启动服务）
         if (Natives.definitelyRunningAsRoot()) {
             throw new RuntimeException("can not run elasticsearch as root");
         }
 
         // enable system call filter
+        // 如果开启，则进行系统调用过滤器的安装（主要用于控制进程行为，不让其进行进程fork和exec操作）
         if (systemCallFilter) {
             Natives.tryInstallSystemCallFilter(tmpFile);
         }
 
         // mlockall if requested
+        // 如果开启，则进行获取mlockall（此操作用于将当前进程的全部虚拟空间进行加锁，防止出现内存交换现象，将进程的地址空间交换到外存上（swap区））
         if (mlockAll) {
             if (Constants.WINDOWS) {
                Natives.tryVirtualLock();
@@ -133,6 +136,7 @@ final class Bootstrap {
         }
 
         // listener for windows close event
+        // 注册窗口关闭事件的监听器
         if (ctrlHandler) {
             Natives.addConsoleCtrlHandler(new ConsoleCtrlHandler() {
                 @Override
@@ -152,22 +156,26 @@ final class Bootstrap {
         }
 
         // force remainder of JNA to be loaded (if available).
+        // 如果此方法可用的话，则强制加载jna的剩余部分
         try {
             JNAKernel32Library.getInstance();
         } catch (Exception ignored) {
             // we've already logged this.
         }
-
+        //设置进程的最大创建线程数、最大虚拟内存大小和最大文件大小
         Natives.trySetMaxNumberOfThreads();
         Natives.trySetMaxSizeVirtualMemory();
         Natives.trySetMaxFileSize();
 
         // init lucene random seed. it will use /dev/urandom where available:
+        // 初始化lucene随机种子。它会在可用的地方使用/dev/urandom:
         StringHelper.randomId();
     }
 
     static void initializeProbes() {
         // Force probes to be loaded
+        // 强制加载探针
+        // 加载进程探针、操作系统探针和jvm信息对象
         ProcessProbe.getInstance();
         OsProbe.getInstance();
         JvmInfo.jvmInfo();
@@ -182,7 +190,7 @@ final class Bootstrap {
         } catch (IOException e) {
             throw new BootstrapException(e);
         }
-
+        // 初始化进程的本地设置（资源相关设置）
         initializeNatives(
                 environment.tmpFile(),
                 BootstrapSettings.MEMORY_LOCK_SETTING.get(settings),
@@ -190,16 +198,20 @@ final class Bootstrap {
                 BootstrapSettings.CTRLHANDLER_SETTING.get(settings));
 
         // initialize probes before the security manager is installed
+        // 在安装安全管理器之前进行探测的初始化
         initializeProbes();
-
+        // 如果需要，则添加相应资源释放的shutdownhook的监听方法
         if (addShutdownHook) {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
                     try {
+                        // 关闭当前节点的进程以及各个模块对应的本地控制器的进程
                         IOUtils.close(node, spawner);
+                        //释放logger对象
                         LoggerContext context = (LoggerContext) LogManager.getContext(false);
                         Configurator.shutdown(context);
+                        // 如果node关闭失败，则抛出异常
                         if (node != null && node.awaitClose(10, TimeUnit.SECONDS) == false) {
                             throw new IllegalStateException("Node didn't stop within 10 seconds. " +
                                     "Any outstanding requests or tasks might get killed.");
@@ -208,6 +220,7 @@ final class Bootstrap {
                         throw new ElasticsearchException("failed to stop node", ex);
                     } catch (InterruptedException e) {
                         LogManager.getLogger(Bootstrap.class).warn("Thread got interrupted while waiting for the node to shutdown.");
+                        //响应线程中断事件
                         Thread.currentThread().interrupt();
                     }
                 }
@@ -216,6 +229,7 @@ final class Bootstrap {
 
         try {
             // look for jar hell
+            // 检测当前类路径下是否存在重复的jar包（不允许）
             final Logger logger = LogManager.getLogger(JarHell.class);
             JarHell.checkJarHell(logger::debug);
         } catch (IOException | URISyntaxException e) {
@@ -223,6 +237,7 @@ final class Bootstrap {
         }
 
         // Log ifconfig output before SecurityManager is installed
+        // 在安装SecurityManager之前使用log打印ifconfig相关的网络信息
         IfConfig.logIfNecessary();
 
         // install SM after natives, shutdown hooks, etc.

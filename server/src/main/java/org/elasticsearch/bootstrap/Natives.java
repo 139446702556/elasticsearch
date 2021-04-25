@@ -35,6 +35,7 @@ final class Natives {
     private static final Logger logger = LogManager.getLogger(Natives.class);
 
     // marker to determine if the JNA class files are available to the JVM
+    // 标记jna类文件是否对jvm可用
     static final boolean JNA_AVAILABLE;
 
     static {
@@ -61,10 +62,12 @@ final class Natives {
     }
 
     static boolean definitelyRunningAsRoot() {
+        //如果jna类文件对jvm不可用，则无法检测服务启动用户，跳过检测
         if (!JNA_AVAILABLE) {
             logger.warn("cannot check if running as root because JNA is not available");
             return false;
         }
+        //获取运行当前服务的用户是否为root用户
         return JNANatives.definitelyRunningAsRoot();
     }
 

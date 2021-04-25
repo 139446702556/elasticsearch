@@ -40,6 +40,7 @@ public final class IfConfig {
     private static final String INDENT = "        ";
 
     /** log interface configuration at debug level, if its enabled */
+    // 如果开启了logger的debug级别，则使用其打印网络接口的实时配置信息
     public static void logIfNecessary() {
         if (logger.isDebugEnabled()) {
             try {
@@ -51,6 +52,7 @@ public final class IfConfig {
     }
 
     /** perform actual logging: might throw exception if things go wrong */
+    // 打印执行实时的日志记录，如果出错，可能会抛出异常
     private static void doLogging() throws IOException {
         StringBuilder msg = new StringBuilder();
         for (NetworkInterface nic : NetworkUtils.getInterfaces()) {

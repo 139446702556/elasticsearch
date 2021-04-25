@@ -73,6 +73,7 @@ public class JarHell {
 
     /**
      * Checks the current classpath for duplicate classes
+     * 检测当前类路径下是否存在重复的类文件（jar包）
      * @param output A {@link String} {@link Consumer} to which debug output will be sent
      * @throws IllegalStateException if jar hell was found
      */
@@ -138,7 +139,7 @@ public class JarHell {
                     // Eclipse adds this to the classpath when running unit tests...
                     continue;
                 }
-                URL url = PathUtils.get(element).toUri().toURL();               
+                URL url = PathUtils.get(element).toUri().toURL();
                 // junit4.childvm.count
                 if (urlElements.add(url) == false && element.endsWith(".jar")) {
                     throw new IllegalStateException("jar hell!" + System.lineSeparator() +
@@ -154,6 +155,7 @@ public class JarHell {
 
     /**
      * Checks the set of URLs for duplicate classes
+     * 检测给定的url集合中是否存在重复的
      * @param urls A set of URLs from the classpath to be checked for conflicting jars
      * @param output A {@link String} {@link Consumer} to which debug output will be sent
      * @throws IllegalStateException if jar hell was found

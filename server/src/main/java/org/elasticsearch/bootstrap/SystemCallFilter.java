@@ -446,6 +446,7 @@ final class SystemCallFilter {
     /** The only supported flag... */
     static final int SANDBOX_NAMED = 1;
     /** Allow everything except process fork and execution */
+    // 允许除了进程复制创建和执行的其他所有操作
     static final String SANDBOX_RULES = "(version 1) (allow default) (deny process-fork) (deny process-exec)";
 
     /** try to install our custom rule profile into sandbox_init() to block execution */
