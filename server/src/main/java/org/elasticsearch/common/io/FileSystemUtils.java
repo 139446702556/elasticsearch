@@ -109,6 +109,7 @@ public final class FileSystemUtils {
     /**
      * Check that a directory exists, is a directory and is readable
      * by the current user
+     * 检测给定目录是否存在，以及是否可以让当前用户读取
      */
     public static boolean isAccessibleDirectory(Path directory, Logger logger) {
         assert directory != null && logger != null;

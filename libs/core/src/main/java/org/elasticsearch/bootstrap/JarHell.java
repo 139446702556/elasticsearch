@@ -89,6 +89,7 @@ public class JarHell {
 
     /**
      * Parses the classpath into an array of URLs
+     * 解析classpath得到一个url数组
      * @return array of URLs
      * @throws IllegalStateException if the classpath contains empty elements
      */
@@ -98,6 +99,7 @@ public class JarHell {
 
     /**
      * Parses the classpath into a set of URLs. For testing.
+     * 解析类路径下的全部文件，并得到文件url集合的快照
      * @param classPath classpath to parse (typically the system property {@code java.class.path})
      * @return array of URLs
      * @throws IllegalStateException if the classpath contains empty elements

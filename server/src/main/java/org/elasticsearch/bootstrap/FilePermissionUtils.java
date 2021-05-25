@@ -34,6 +34,7 @@ public class FilePermissionUtils {
 
     /**
      * Add access to single file path
+     * 给指定文件添加访问权限（绝对和相对路径两种）
      * @param policy current policy to add permissions to
      * @param path the path itself
      * @param permissions set of file permissions to grant to the path
@@ -67,6 +68,7 @@ public class FilePermissionUtils {
                                         boolean recursiveAccessOnly) throws IOException {
         // paths may not exist yet, this also checks accessibility
         try {
+            // 检测指定的目录是否具有read权限，如果指定目录还不存在，则会进行递归创建
             Security.ensureDirectoryExists(path);
         } catch (IOException e) {
             throw new IllegalStateException("Unable to access '" + configurationName + "' (" + path + ")", e);
@@ -76,20 +78,25 @@ public class FilePermissionUtils {
         // path. Adding the directory would only create more overhead for this fast path.
         if (recursiveAccessOnly == false) {
             // add access for path itself
+            // 添加对指定路径的访问权限
             policy.add(new FilePermission(path.toString(), permissions));
         }
+        // 添加对指定路径下的文件的访问权限
         policy.add(new FilePermission(path.toString() + path.getFileSystem().getSeparator() + "-", permissions));
         /*
          * The file permission model since JDK 9 requires this due to the removal of pathname canonicalization. See also
          * https://github.com/elastic/elasticsearch/issues/21534.
          */
         final Path realPath = path.toRealPath();
+        // 如果当前给定path与其绝对路径不相同，则对其绝对路径在进行一波权限设置（path可能是相对路径）
         if (path.toString().equals(realPath.toString()) == false) {
             if (recursiveAccessOnly == false) {
                 // add access for path itself
+                // 添加对路径自己的访问权限
                 policy.add(new FilePermission(realPath.toString(), permissions));
             }
             // add access for files underneath
+            // 添加对路径下的文件们的访问权限
             policy.add(new FilePermission(realPath.toString() + realPath.getFileSystem().getSeparator() + "-", permissions));
         }
     }

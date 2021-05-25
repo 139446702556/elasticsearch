@@ -110,18 +110,25 @@ final class Security {
 
     /**
      * Initializes SecurityManager for the environment
+     * 从环境变量相关信息来进行安全管理器的安装
      * Can only happen once!
+     * 安全管理器只能够安装一起
      * @param environment configuration for generating dynamic permissions
+     *                    生成动态权限使用的配置
      * @param filterBadDefaults true if we should filter out bad java defaults in the system policy.
+     *                          如果需要过滤掉java中的坏的默认值，则为true
      */
     static void configure(Environment environment, boolean filterBadDefaults) throws IOException, NoSuchAlgorithmException {
 
         // enable security policy: union of template and environment-based paths, and possibly plugin permissions
+        // 开启安全策略：此策略是基于模版和环境路径的联合，可能还有插件权限
         Map<String, URL> codebases = getCodebaseJarMap(JarHell.parseClassPath());
+        // 配置服务的安全策略
         Policy.setPolicy(new ESPolicy(codebases, createPermissions(environment), getPluginPermissions(environment), filterBadDefaults,
             createRecursiveDataPathPermission(environment)));
 
         // enable security manager
+        // 开启安全管理器
         final String[] classesThatCanExit =
                 new String[]{
                         // SecureSM matches class names as regular expressions so we escape the $ that arises from the nested class name
@@ -130,11 +137,15 @@ final class Security {
         System.setSecurityManager(new SecureSM(classesThatCanExit));
 
         // do some basic tests
+        // 对权限策略配置进行基本的测试
         selfTest();
     }
 
     /**
      * Return a map from codebase name to codebase url of jar codebases used by ES core.
+     * 返回一个map对象，此对象为代码库的名称和es core使用的代码库jar包对应的代码库url的映射
+     *
+     * 在给定的url集合中，找出全部的jar包的名称与其对应的url的映射
      */
     @SuppressForbidden(reason = "find URL path")
     static Map<String, URL> getCodebaseJarMap(Set<URL> urls) {
@@ -247,10 +258,14 @@ final class Security {
     }
 
     /** returns dynamic Permissions to configured paths and bind ports */
+    // 创建服务的安全权限对象
     static Permissions createPermissions(Environment environment) throws IOException {
         Permissions policy = new Permissions();
+        //给classpath下的文件和目录添加访问权限（read和readlink权限）
         addClasspathPermissions(policy);
+        //给当前服务环境变量中的相关配置添加权限
         addFilePermissions(policy, environment);
+        //添加http和tcp传输用到的相关权限
         addBindPermissions(policy, environment.settings());
         return policy;
     }
@@ -264,10 +279,12 @@ final class Security {
     }
 
     /** Adds access to classpath jars/classes for jar hell scan, etc */
+    // 给classpath下的所有文件设置权限
     @SuppressForbidden(reason = "accesses fully qualified URLs to configure security")
     static void addClasspathPermissions(Permissions policy) throws IOException {
         // add permissions to everything in classpath
         // really it should be covered by lib/, but there could be e.g. agents or similar configured)
+        // 遍历类路径下的所有文件和目录
         for (URL url : JarHell.parseClassPath()) {
             Path path;
             try {
@@ -286,22 +303,27 @@ final class Security {
 
     /**
      * Adds access to all configurable paths.
+     * 给全部的配置路径添加访问权限
      */
     static void addFilePermissions(Permissions policy, Environment environment) throws IOException {
         // read-only dirs
+        // 给服务相关目录和内部文件设置只读权限
         addDirectoryPath(policy, Environment.PATH_HOME_SETTING.getKey(), environment.binFile(), "read,readlink", false);
         addDirectoryPath(policy, Environment.PATH_HOME_SETTING.getKey(), environment.libFile(), "read,readlink", false);
         addDirectoryPath(policy, Environment.PATH_HOME_SETTING.getKey(), environment.modulesFile(), "read,readlink", false);
         addDirectoryPath(policy, Environment.PATH_HOME_SETTING.getKey(), environment.pluginsFile(), "read,readlink", false);
         addDirectoryPath(policy, "path.conf'", environment.configFile(), "read,readlink", false);
         // read-write dirs
+        // 给tmpdir和log目录添加读写权限
         addDirectoryPath(policy, "java.io.tmpdir", environment.tmpFile(), "read,readlink,write,delete", false);
         addDirectoryPath(policy, Environment.PATH_LOGS_SETTING.getKey(), environment.logsFile(), "read,readlink,write,delete", false);
+        // 给共享数据目录设置读写权限
         if (environment.sharedDataFile() != null) {
             addDirectoryPath(policy, Environment.PATH_SHARED_DATA_SETTING.getKey(), environment.sharedDataFile(),
                 "read,readlink,write,delete", false);
         }
         final Set<Path> dataFilesPaths = new HashSet<>();
+        // 给服务数据存储目录设置读写权限（如果路径存在重复，则抛出异常）
         for (Path path : environment.dataFiles()) {
             addDirectoryPath(policy, Environment.PATH_DATA_SETTING.getKey(), path, "read,readlink,write,delete", false);
             /*
@@ -318,9 +340,11 @@ final class Security {
                 throw new IllegalStateException("unable to access [" + path + "]", e);
             }
         }
+        //给path.repo添加读写权限
         for (Path path : environment.repoFiles()) {
             addDirectoryPath(policy, Environment.PATH_REPO_SETTING.getKey(), path, "read,readlink,write,delete", false);
         }
+        //给服务的pid文件添加删除权限
         if (environment.pidFile() != null) {
             // we just need permission to remove the file if its elsewhere.
             addSingleFilePath(policy, environment.pidFile(), "delete");
@@ -334,7 +358,9 @@ final class Security {
      * @param settings the {@link Settings} instance to read the HTTP and transport settings from
      */
     private static void addBindPermissions(Permissions policy, Settings settings) {
+        // 给http端口添加socket网络操作权限
         addSocketPermissionForHttp(policy, settings);
+        // 添加tcp相关权限设置
         addSocketPermissionForTransportProfiles(policy, settings);
     }
 

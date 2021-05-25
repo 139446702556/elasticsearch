@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 /** custom policy for union of static and dynamic permissions */
+// 自定义服务的安全策略
 final class ESPolicy extends Policy {
 
     /** template policy file, the one used in tests */

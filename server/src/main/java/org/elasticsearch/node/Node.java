@@ -231,7 +231,7 @@ public class Node implements Closeable {
     * Note that this does not control whether the node stores actual indices (see
     * {@link #NODE_DATA_SETTING}). However, if this is false, {@link #NODE_DATA_SETTING}
     * and {@link #NODE_MASTER_SETTING} must also be false.
-    *
+    * 是否允许将节点相关的元数据持久化到磁盘上（设置）
     */
     public static final Setting<Boolean> NODE_LOCAL_STORAGE_SETTING =
         Setting.boolSetting("node.local_storage", true, Property.Deprecated, Property.NodeScope);
@@ -291,21 +291,26 @@ public class Node implements Closeable {
 
     /**
      * Constructs a node
-     *
+     * 构造一个服务节点
      * @param initialEnvironment         the initial environment for this node, which will be added to by plugins
      * @param classpathPlugins           the plugins to be loaded from the classpath
      * @param forbidPrivateIndexSettings whether or not private index settings are forbidden when creating an index; this is used in the
      *                                   test framework for tests that rely on being able to set private settings
+     *                                   创建索引时，是否禁止私有索引设置， 在测试框架中用于依赖于能够设置私有设置的测试
      */
     protected Node(final Environment initialEnvironment,
                    Collection<Class<? extends Plugin>> classpathPlugins, boolean forbidPrivateIndexSettings) {
+        // 注册发生错误时需要释放的所有资源
         final List<Closeable> resourcesToClose = new ArrayList<>(); // register everything we need to release in the case of an error
         boolean success = false;
         try {
+            // 拷贝配置和命令中设置的环境变量内容并添加client.type（客户端调用服务端的方式，默认为node，transport为传输方式调用及按照约
+            // 定传输对应调用内容（指令发送给协调节点master），node客户端会以节点方式加入到集群中并发起调用）来创建新的Settings对象
             Settings tmpSettings = Settings.builder().put(initialEnvironment.settings())
                 .put(Client.CLIENT_TYPE_SETTING_S.getKey(), CLIENT_TYPE).build();
-
+            // 获取jvm相关信息
             final JvmInfo jvmInfo = JvmInfo.jvmInfo();
+            //打印服务相关信息
             logger.info(
                 "version[{}], pid[{}], build[{}/{}/{}/{}], OS[{}/{}/{}], JVM[{}/{}/{}/{}]",
                 Build.CURRENT.getQualifiedVersion(),
@@ -321,6 +326,7 @@ public class Node implements Closeable {
                 Constants.JVM_NAME,
                 Constants.JAVA_VERSION,
                 Constants.JVM_VERSION);
+            //jvm是否使用jdk捆绑包
             if (jvmInfo.getBundledJdk()) {
                 logger.info("JVM home [{}], using bundled JDK [{}]", System.getProperty("java.home"), jvmInfo.getUsingBundledJdk());
             } else {
@@ -330,6 +336,7 @@ public class Node implements Closeable {
                     "no-jdk distributions that do not bundle a JDK are deprecated and will be removed in a future release");
             }
             logger.info("JVM arguments {}", Arrays.toString(jvmInfo.getInputArguments()));
+            //判断当前es版本是否为生产版本（通过判断version是否只有点和数字组成）
             if (Build.CURRENT.isProductionRelease() == false) {
                 logger.warn(
                     "version [{}] is a pre-release version of Elasticsearch and is not suitable for production",
@@ -341,21 +348,24 @@ public class Node implements Closeable {
                     initialEnvironment.configFile(), Arrays.toString(initialEnvironment.dataFiles()),
                     initialEnvironment.logsFile(), initialEnvironment.pluginsFile());
             }
-
+            // 创建plugin相关服务对象，用于对module和plugin进行操作
             this.pluginsService = new PluginsService(tmpSettings, initialEnvironment.configFile(), initialEnvironment.modulesFile(),
                 initialEnvironment.pluginsFile(), classpathPlugins);
+            // 扫描插件，将当前的settings与插件们的标记属性合并，并返回
             final Settings settings = pluginsService.updatedSettings();
-
+            //获取全部插件对应的node role对象（对es相关信息或操作的访问权限控制，去重的）
             final Set<DiscoveryNodeRole> additionalRoles = pluginsService.filterPlugins(Plugin.class)
                 .stream()
                 .map(Plugin::getRoles)
                 .flatMap(Set::stream)
                 .collect(Collectors.toSet());
+            // 过滤重复的role，并保证不存在重复的rolename缩写，将此映射对象保存到类变量中
             DiscoveryNode.setAdditionalRoles(additionalRoles);
 
             /*
              * Create the environment based on the finalized view of the settings. This is to ensure that components get the same setting
              * values, no matter they ask for them from.
+             * 根据组建的最终settings来创建Environment对象，已确保组建能够获取到相同的设置值
              */
             this.environment = new Environment(settings, initialEnvironment.configFile(), Node.NODE_LOCAL_STORAGE_SETTING.get(settings));
             Environment.assertEquivalent(initialEnvironment, this.environment);

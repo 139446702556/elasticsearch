@@ -33,6 +33,7 @@ import java.util.TreeSet;
 
 /**
  * Represents a node role.
+ * 代表一个节点的角色
  */
 public abstract class DiscoveryNodeRole implements Comparable<DiscoveryNodeRole> {
 
@@ -202,6 +203,7 @@ public abstract class DiscoveryNodeRole implements Comparable<DiscoveryNodeRole>
 
     /**
      * The built-in node roles.
+     * 内置节点角色
      */
     public static SortedSet<DiscoveryNodeRole> BUILT_IN_ROLES = Collections.unmodifiableSortedSet(
         new TreeSet<>(Arrays.asList(DATA_ROLE, INGEST_ROLE, MASTER_ROLE, REMOTE_CLUSTER_CLIENT_ROLE)));

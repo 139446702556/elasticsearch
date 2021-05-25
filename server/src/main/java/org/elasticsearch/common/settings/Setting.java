@@ -90,6 +90,7 @@ public class Setting<T> implements ToXContentObject {
     public enum Property {
         /**
          * should be filtered in some api (mask password/credentials)
+         * 应该在一些api中进行过滤（屏蔽密码和授权凭证）
          */
         Filtered,
 
@@ -106,11 +107,13 @@ public class Setting<T> implements ToXContentObject {
 
         /**
          * mark this setting as deprecated
+         * 已弃用
          */
         Deprecated,
 
         /**
          * Node scope
+         * 节点范围
          */
         NodeScope,
 

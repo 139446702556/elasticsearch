@@ -178,6 +178,7 @@ final class Bootstrap {
         // 加载进程探针、操作系统探针和jvm信息对象
         ProcessProbe.getInstance();
         OsProbe.getInstance();
+        // 检测是否有读取jvm全部属性信息和监控的权限
         JvmInfo.jvmInfo();
     }
 
@@ -241,6 +242,7 @@ final class Bootstrap {
         IfConfig.logIfNecessary();
 
         // install SM after natives, shutdown hooks, etc.
+        // 在natives、shutdown hooks和etc初始化完成之后进行安全管理器的安装
         try {
             Security.configure(environment, BootstrapSettings.SECURITY_FILTER_BAD_DEFAULTS_SETTING.get(settings));
         } catch (IOException | NoSuchAlgorithmException e) {

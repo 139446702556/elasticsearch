@@ -285,6 +285,7 @@ public class Environment {
     // TODO: rename all these "file" methods to "dir"
     /**
      * The config directory.
+     * config目录
      */
     public Path configFile() {
         return configFile;

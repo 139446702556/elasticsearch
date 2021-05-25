@@ -33,6 +33,7 @@ import java.util.List;
 
 /**
  * Information about plugins and modules
+ * 关于服务相关的全部插件和模块信息的对象
  */
 public class PluginsAndModules implements ReportingService.Info {
     private final List<PluginInfo> plugins;

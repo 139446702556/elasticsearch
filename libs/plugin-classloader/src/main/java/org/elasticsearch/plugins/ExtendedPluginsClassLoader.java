@@ -51,6 +51,7 @@ public class ExtendedPluginsClassLoader extends ClassLoader {
 
     /**
      * Return a new classloader across the parent and extended loaders.
+     * 返回一个包装了parent and extended loaders的新的classloader
      */
     public static ExtendedPluginsClassLoader create(ClassLoader parent, List<ClassLoader> extendedLoaders) {
         return AccessController.doPrivileged((PrivilegedAction<ExtendedPluginsClassLoader>)

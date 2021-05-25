@@ -526,16 +526,21 @@ public class DiscoveryNode implements Writeable, ToXContentFragment {
     }
 
     public static void setAdditionalRoles(final Set<DiscoveryNodeRole> additionalRoles) {
+        // role对象中的legacySetting已经废弃不能使用，否则终止执行
         assert additionalRoles.stream().allMatch(r -> r.legacySetting() == null || r.legacySetting().isDeprecated()) : additionalRoles;
+        // 合并内置node role和plugin定义的相关角色，并将其转换为rolename和DiscoveryNodeRole对象的映射
         final Map<String, DiscoveryNodeRole> roleNameToPossibleRoles =
             rolesToMap(Stream.concat(DiscoveryNodeRole.BUILT_IN_ROLES.stream(), additionalRoles.stream()));
         // collect the abbreviation names into a map to ensure that there are not any duplicate abbreviations
+        // 提取rolename缩写与role对象的映射对象
         final Map<String, DiscoveryNodeRole> roleNameAbbreviationToPossibleRoles = Collections.unmodifiableMap(
                 roleNameToPossibleRoles.values()
                         .stream()
                         .collect(Collectors.toMap(DiscoveryNodeRole::roleNameAbbreviation, Function.identity())));
+        // 确保不存在重复的缩写
         assert roleNameToPossibleRoles.size() == roleNameAbbreviationToPossibleRoles.size() :
                 "roles by name [" + roleNameToPossibleRoles + "], roles by name abbreviation [" + roleNameAbbreviationToPossibleRoles + "]";
+        // 将node role信息保存到类变量中
         roleMap = roleNameToPossibleRoles;
     }
 

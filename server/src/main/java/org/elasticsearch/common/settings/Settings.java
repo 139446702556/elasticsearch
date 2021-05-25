@@ -580,7 +580,8 @@ public final class Settings implements ToXContentFragment {
     }
 
     /**
-     * Returns a builder to be used in order to build settings.
+     * RETURNS A BUILDER TO BE USED IN ORDER TO BUILD SETTINGS.
+     * 返回用于按顺序构建settings的builder
      */
     public static Builder builder() {
         return new Builder();
@@ -1016,6 +1017,7 @@ public final class Settings implements ToXContentFragment {
          * 设置所有提供的设置
          * @param settings the settings to set
          * @param copySecureSettings if <code>true</code> all settings including secure settings are copied.
+         *                           如果为true，则拷贝所有设置包括安全设置
          */
         public Builder put(Settings settings, boolean copySecureSettings) {
             Map<String, Object> settingsMap = new HashMap<>(settings.settings);
